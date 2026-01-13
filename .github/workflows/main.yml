@@ -2,51 +2,59 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ سحب المشروع
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ إعداد Node.js (مهم جدًا)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
+      # 3️⃣ تثبيت مكتبات npm
       - name: Install dependencies
         run: npm install
 
-      - name: Build web assets
-        run: |
-          mkdir -p www
-          cp *.html www/
-          cp *.js www/
-          cp *.css www/
+      # 4️⃣ تثبيت Capacitor Android صراحة
+      - name: Install Capacitor Android
+        run: npm install @capacitor/android
 
+      # 5️⃣ إعداد Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
+      # 6️⃣ تثبيت Android SDK
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
 
+      # 7️⃣ إضافة منصة أندرويد (لو موجودة يتجاوز)
       - name: Add Android platform
-        run: npx cap add android
+        run: |
+          npx cap add android || echo "Android platform already exists"
 
+      # 8️⃣ مزامنة Capacitor
       - name: Sync Capacitor
-        run: npx cap sync
+        run: npx cap sync android
 
+      # 9️⃣ بناء APK (Debug)
       - name: Build Debug APK
         run: |
           cd android
+          chmod +x gradlew
           ./gradlew assembleDebug
 
+      # 🔟 رفع ملف APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
